@@ -58,6 +58,7 @@ class Invoice(Base):
     sales_person: Mapped["SalesPerson"] = relationship("SalesPerson", back_populates="invoices")
     invoice_items: Mapped[list["InvoiceItem"]] = relationship("InvoiceItem", back_populates="invoice")
     payments: Mapped[list["Payment"]] = relationship("Payment", back_populates="invoice")
+    
 
 
 # ----------------------

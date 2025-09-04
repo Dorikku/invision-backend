@@ -51,6 +51,75 @@ async def generate_invoice_number(db: AsyncSession) -> str:
     
     return f"INV-{current_year}-{new_num:03d}"
 
+@router.get("/invoices", response_model=List[InvoiceSchema])
+async def list_invoices(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(InvoiceModel)
+        .options(
+            selectinload(InvoiceModel.invoice_items)
+            .selectinload(InvoiceItemModel.so_item)
+            .selectinload(SOItem.product),
+            selectinload(InvoiceModel.customer),
+            selectinload(InvoiceModel.sales_person),
+            selectinload(InvoiceModel.sales_order)
+        )
+        .order_by(InvoiceModel.created_at.desc())
+    )
+    invoices = result.scalars().unique().all()
+    
+    response = []
+    for invoice in invoices:
+        subtotal = 0.0
+        tax = 0.0
+        items = []
+        for inv_item in invoice.invoice_items:
+            so_item = inv_item.so_item
+            item_total = float(inv_item.quantity_invoiced * so_item.price)
+            item_tax = item_total * float(so_item.tax_rate)
+            subtotal += item_total
+            tax += item_tax
+
+            items.append(
+                LineItem(
+                    id=str(inv_item.id),
+                    productId=str(so_item.product_id),
+                    productName=so_item.product.name if so_item.product else "Unknown",
+                    description=so_item.product.description if so_item.product else None,
+                    quantity=inv_item.quantity_invoiced,
+                    unitCost=float(so_item.product.cost_price) if so_item.product else 0.0,
+                    unitPrice=float(so_item.price),
+                    total=item_total,
+                    taxRate=float(so_item.tax_rate),
+                    shippedQuantity=0
+                )
+            )
+
+        total = subtotal + tax
+
+        response.append(
+            InvoiceSchema(
+                id=invoice.id,
+                invoiceNumber=invoice.invoice_number,
+                salesOrderId=invoice.sales_order_id,
+                customerId=invoice.customer_id,
+                customerName=invoice.customer.name if invoice.customer else "Unknown",
+                customerEmail=invoice.customer.email if invoice.customer else None,
+                customerAddress=invoice.customer.address if invoice.customer else None,
+                date=invoice.date.isoformat(),
+                dueDate=invoice.due_date.isoformat(),
+                subtotal=subtotal,
+                tax=tax,
+                total=total,
+                status=invoice.status.value,
+                notes=invoice.notes,
+                createdAt=invoice.created_at.isoformat(),
+                updatedAt=invoice.updated_at.isoformat(),
+                items=items
+            )
+        )
+    
+    return response
+
 @router.get("/sales-orders/{order_id}/invoiced-quantities", response_model=List[InvoicedQuantityResponse])
 async def get_invoiced_quantities(order_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
