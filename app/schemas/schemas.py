@@ -4,7 +4,7 @@ from datetime import date, datetime
 from enum import Enum
 
 # Status Enums for better validation
-class InvoiceStatus(str, Enum):
+class SOInvoiceStatus(str, Enum):
     not_invoiced = "not_invoiced"
     partial = "partial"
     invoiced = "invoiced"
@@ -18,6 +18,13 @@ class ShipmentStatus(str, Enum):
     not_shipped = "not_shipped"
     partial = "partial"
     shipped = "shipped"
+
+class InvoiceStatus(str, Enum):
+    unpaid = "unpaid"
+    partial = "partial"
+    paid = "paid"
+    overdue = "overdue"
+    cancelled = "cancelled"
 
 # Line Item schemas
 class LineItemCreate(BaseModel):
@@ -69,7 +76,7 @@ class CreateSalesOrderRequest(BaseModel):
     customer_id: int
     sales_person_id: int
     date: str
-    invoice_status: InvoiceStatus = InvoiceStatus.not_invoiced
+    invoice_status: SOInvoiceStatus = SOInvoiceStatus.not_invoiced
     payment_status: PaymentStatus = PaymentStatus.unpaid
     shipment_status: ShipmentStatus = ShipmentStatus.not_shipped
     notes: str = ""
@@ -155,3 +162,40 @@ class SalesPersonBase(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# Invoice Schema
+class InvoiceSchema(BaseModel):
+    id: int
+    invoiceNumber: str
+    salesOrderId: Optional[int]
+    customerId: int
+    customerName: str
+    customerEmail: Optional[str]
+    customerAddress: Optional[str]
+    date: str  # ISO format date (e.g., "2025-09-05")
+    dueDate: str  # ISO format date (e.g., "2025-10-05")
+    subtotal: float
+    tax: float
+    total: float
+    status: InvoiceStatus
+    notes: Optional[str]
+    createdAt: str  # ISO format datetime (e.g., "2025-09-05T01:02:00Z")
+    updatedAt: str  # ISO format datetime (e.g., "2025-09-05T01:02:00Z")
+    items: List[LineItem]
+
+    class Config:
+        from_attributes = True  # Enables ORM compatibility
+
+# InvoiceItem Create Schema (used in CreateInvoiceRequest)
+class InvoiceItemCreate(BaseModel):
+    soItemId: int
+    quantity: int
+
+# Create Invoice Request Schema
+class CreateInvoiceRequest(BaseModel):
+    salesOrderId: int
+    date: str  # ISO format date
+    dueDate: str  # ISO format date
+    notes: Optional[str]
+    items: List[InvoiceItemCreate]

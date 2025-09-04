@@ -72,7 +72,7 @@ class SalesOrder(Base):
     created_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Relationships
-    items: Mapped[list["SOItem"]] = relationship("SOItem", back_populates="sales_order")
+    items: Mapped[list["SOItem"]] = relationship("SOItem", back_populates="sales_order", cascade="all, delete-orphan", passive_deletes=True)
     customer: Mapped["Customer"] = relationship("Customer", back_populates="orders")
     quotation: Mapped["Quotation"] = relationship("Quotation", back_populates="sales_orders")
     shipments: Mapped[list["Shipment"]] = relationship("Shipment", back_populates="sales_order")

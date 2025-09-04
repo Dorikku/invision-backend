@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -332,3 +332,20 @@ async def get_sales_order(order_id: int, db: AsyncSession = Depends(get_db)):
         updatedAt=order.updated_at.isoformat(),
         items=items
     )
+
+
+@router.delete("/sales-orders/{order_id}", status_code=status.HTTP_200_OK)
+async def delete_sales_order(order_id: int, db: AsyncSession = Depends(get_db)):
+    async with db.begin():
+        result = await db.execute(
+            select(SalesOrderModel).where(SalesOrderModel.id == order_id)
+        )
+        order = result.scalar_one_or_none()
+
+        if not order:
+            raise HTTPException(status_code=404, detail="Sales order not found")
+
+        # Just delete sales order, Postgres cascades the rest
+        await db.delete(order)
+
+    return {"message": "Sales order deleted successfully"}

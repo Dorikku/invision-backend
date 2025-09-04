@@ -41,7 +41,7 @@ class Invoice(Base):
     status: Mapped[InvoiceStatus] = mapped_column(
         Enum(InvoiceStatus, name="invoice_status_enum"),
         default=InvoiceStatus.unpaid,
-    )
+    ) 
     
     sales_person_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("sales_persons.id"), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
