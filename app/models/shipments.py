@@ -9,7 +9,7 @@ class Shipment(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
     sales_order_id: Mapped[int] = mapped_column(Integer, ForeignKey("sales_orders.id"), nullable=False)
-    carrier: Mapped[str] = mapped_column(String, nullable=False)
+    carrier: Mapped[str] = mapped_column(String, nullable=True)
     date_delivered: Mapped[Date | None] = mapped_column(Date, nullable=True)
     tracker: Mapped[str | None] = mapped_column(String, nullable=True)
 

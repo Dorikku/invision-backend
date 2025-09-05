@@ -75,7 +75,7 @@ class SalesOrder(Base):
     items: Mapped[list["SOItem"]] = relationship("SOItem", back_populates="sales_order", cascade="all, delete-orphan", passive_deletes=True)
     customer: Mapped["Customer"] = relationship("Customer", back_populates="orders")
     quotation: Mapped["Quotation"] = relationship("Quotation", back_populates="sales_orders")
-    shipments: Mapped[list["Shipment"]] = relationship("Shipment", back_populates="sales_order")
+    shipments: Mapped[list["Shipment"]] = relationship("Shipment", back_populates="sales_order", cascade="all, delete-orphan", passive_deletes=True)
     sales_person: Mapped["SalesPerson"] = relationship("SalesPerson", back_populates="orders")
     invoices: Mapped[list["Invoice"]] = relationship("Invoice", back_populates="sales_order", cascade="all, delete-orphan", passive_deletes=True)
 

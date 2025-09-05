@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from .db import ping_db
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import sales_orders, customers, products, sales_persons, invoices
+from .routers import sales_orders, customers, products, sales_persons, invoices, shipments
 
 app = FastAPI(title="Sales API", version="0.1.0")
 
@@ -41,5 +41,6 @@ app.include_router(customers.router, prefix="/api/v1")
 app.include_router(products.router, prefix="/api/v1")
 app.include_router(sales_persons.router, prefix="/api/v1")
 app.include_router(invoices.router, prefix="/api/v1")
+app.include_router(shipments.router, prefix="/api/v1")
 
 # uvicorn app.main:app --reload
